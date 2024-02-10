@@ -313,15 +313,21 @@ bool ProcessEncoderRotation()
             // NOTES: Game mode works by selecting 2 sessions, to make things simpler for all "NAVIGATE" logic, CURRENT_SESSION/INDEX_CURRENT sould always be what we work with
             // and when we "select" a session for A, we copy it into ALTERNATE_SESSION/INDEX_ALTERNATE. We could simplify this logic by swapping INDEX_CURRENT & INDEX_ALTERNATE after B is selected,
             // but that just makes for a very messy logic for the App to keep PREVIOUS/NEXT/CURRENT logic in order. So lets just reverse it here so A = INDEX_ALTERNATE, B = INDEX_CURRENT
-            ComputeVolumeChange(SessionIndex::INDEX_ALTERNATE, encoderSteps, deltaTime);
-            if (g_Sessions[SessionIndex::INDEX_ALTERNATE].data.id != g_Sessions[SessionIndex::INDEX_CURRENT].data.id)
+            if (encoderSteps > 0)
             {
-                uint8_t prev = g_Sessions[SessionIndex::INDEX_CURRENT].data.volume;
-                g_Sessions[SessionIndex::INDEX_CURRENT].data.volume = 100 - g_Sessions[SessionIndex::INDEX_ALTERNATE].data.volume;
-                if (prev != g_Sessions[SessionIndex::INDEX_CURRENT].data.volume)
-                    Communications::Write(Command::VOLUME_CURR_CHANGE);
+                if(g_Sessions[SessionIndex::INDEX_ALTERNATE].data.volume == 100)
+                    ComputeVolumeChange(SessionIndex::INDEX_CURRENT, -encoderSteps, deltaTime);
+                else
+                    ComputeVolumeChange(SessionIndex::INDEX_ALTERNATE, encoderSteps, deltaTime);
             }
             else
+            {
+                if (g_Sessions[SessionIndex::INDEX_CURRENT].data.volume == 100)
+                    ComputeVolumeChange(SessionIndex::INDEX_ALTERNATE, encoderSteps, deltaTime);
+                else
+                    ComputeVolumeChange(SessionIndex::INDEX_CURRENT, -encoderSteps, deltaTime);
+            }
+            if (g_Sessions[SessionIndex::INDEX_ALTERNATE].data.id == g_Sessions[SessionIndex::INDEX_CURRENT].data.id)
                 g_Sessions[SessionIndex::INDEX_CURRENT].data.volume = g_Sessions[SessionIndex::INDEX_ALTERNATE].data.volume;
         }
     }
